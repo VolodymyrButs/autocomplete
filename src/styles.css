@@ -1,0 +1,35 @@
+#root {
+  display: flex;
+  justify-content: space-around;
+  font-family: sans-serif;
+  width: 100%;
+}
+
+#root > div > input {
+  border: 1px solid #000;
+  border-radius: 7px;
+  width: 200px;
+  padding: 10px;
+  box-sizing: border-box;
+  font-size: medium;
+}
+#root > div > input:active {
+  border: 2px solid #000;
+}
+
+#root > div > ul {
+  width: 200px;
+  padding: 5px 0;
+  margin: 0;
+  background-color: rgb(240, 240, 240);
+  list-style: none;
+  border-radius: 7px;
+}
+#root > div > ul > li {
+  font-size: small;
+  text-indent: 10px;
+  padding: 2px 0;
+}
+.isActive {
+  background-color: rgb(218, 218, 218);
+}
