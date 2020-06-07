@@ -226,7 +226,20 @@ const sourceCalback: () => { name: string; isActive?: boolean }[] = () => {
     { name: "Zimbabwe" },
   ];
 };
+
 const container = document.getElementById("first");
-createAutocomplete(container, 2, 2000, sourceCalback);
+createAutocomplete(
+  container,
+  2,
+  2000,
+  sourceCalback(),
+  "Input country (min 2 letter)"
+);
 const container1 = document.getElementById("second");
-createAutocomplete(container1, 2, 5000, sourceCalback);
+createAutocomplete(
+  container1,
+  3,
+  1000,
+  sourceCalback(),
+  "Input country (min 3 letter)"
+);

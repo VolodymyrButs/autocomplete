@@ -1,76 +1,85 @@
 import throttle from "lodash.throttle";
 export const createAutocomplete = (
   container: HTMLElement | null,
-  countLetter: number,
-  delay: number,
-  getSource: () => { name: string; isActive?: boolean }[] = () => []
+  countLetter: number = 1,
+  delay: number = 500,
+  sourceArray: { name: string }[] = [],
+  Placeholder: string = ""
 ) => {
   if (!container) {
     return;
   }
-  const sourceArray = getSource();
+
   var activeListItemIndex = 0;
+
   // input
-  const input = document.createElement("input");
+
+  const inputWrapper = document.createElement("div");
+  inputWrapper.classList.add("inputWrapper");
+  const loadingSpinner = document.createElement("div");
+  const input: HTMLInputElement = document.createElement("input");
+  input.classList.add("input");
+  input.setAttribute("type", "text");
+  Placeholder && (input.placeholder = Placeholder);
+  inputWrapper.appendChild(input);
+  inputWrapper.appendChild(loadingSpinner);
   let inputValue = "";
-  const handleInput = (e: Event) => {
+
+  const handleInput: (Event) => void = (e: Event) => {
     inputValue = input.value;
     if (inputValue && inputValue.length >= countLetter) {
+      loadingSpinner.classList.add("loading");
       activeListItemIndex = 0;
-      showFilteredList();
+      showFilteredListThrottled();
     } else if (container.children[1] && inputValue.length <= countLetter - 1) {
       activeListItemIndex = 0;
-      deleteList();
+      container.removeChild(list);
     }
   };
 
-  const handleSelect = (e: KeyboardEvent) => {
+  input.addEventListener("input", handleInput);
+
+  //select
+
+  const handleSelect: (KeyboardEvent) => void = (e: KeyboardEvent) => {
     let filteredArray = getFiltered();
-    if (e.code == "ArrowDown" && filteredArray) {
+    if (e.code === "ArrowDown" && filteredArray) {
       delete filteredArray[activeListItemIndex].isActive;
       if (activeListItemIndex === filteredArray.length - 1) {
         activeListItemIndex = 0;
       } else {
         activeListItemIndex = activeListItemIndex + 1;
       }
-      filteredArray
-        ? (filteredArray[activeListItemIndex].isActive = true)
-        : null;
-    } else if (e.code == "ArrowUp" && filteredArray) {
+      filteredArray && (filteredArray[activeListItemIndex].isActive = true);
+      showFilteredList();
+    } else if (e.code === "ArrowUp" && filteredArray) {
       delete filteredArray[activeListItemIndex].isActive;
       if (activeListItemIndex === 0) {
         activeListItemIndex = filteredArray.length - 1;
       } else {
         activeListItemIndex = activeListItemIndex - 1;
       }
-      filteredArray
-        ? (filteredArray[activeListItemIndex].isActive = true)
-        : null;
-    } else if (e.code == "Enter" && filteredArray) {
-      input.value = filteredArray[activeListItemIndex].name;
+      filteredArray && (filteredArray[activeListItemIndex].isActive = true);
       showFilteredList();
+    } else if (e.code === "Enter" && filteredArray) {
+      input.value = filteredArray[activeListItemIndex].name;
+      container.removeChild(list);
       activeListItemIndex = 0;
       return;
     } else return;
-    showFilteredList();
   };
-  //   const handleInputThrottled = throttle(handleInput, 2000, {
-  //     leading: false
-  //   });
 
-  input.addEventListener(
-    "input",
-    throttle(handleInput, delay, { leading: false })
-  );
   input.addEventListener(
     "keydown",
     throttle(handleSelect, 100, { leading: false })
   );
+
   // list
-  const deleteList = () => {
-    container.removeChild(list);
-  };
-  const getFiltered = () => {
+
+  const getFiltered: () => {
+    name: string;
+    isActive?: boolean;
+  }[] = () => {
     if (inputValue.length >= countLetter) {
       return sourceArray.filter((fiteredItem) => {
         return (
@@ -80,37 +89,32 @@ export const createAutocomplete = (
       });
     }
   };
-  console.log;
-  const list = document.createElement("ul");
 
+  const list: HTMLUListElement = document.createElement("ul");
+  list.classList.add("list");
   const showFilteredList = () => {
+    loadingSpinner.classList.remove("loading");
     list.innerHTML = "";
-    // find all existing list items
-    // remove all listeners
-    // or
-    // use event delegation
-    // put all lisneters on the 'list'
     let filteredArray = getFiltered();
-    if (
-      filteredArray &&
-      filteredArray.some((listItem) => {
-        return input.value === listItem.name;
-      })
-    ) {
-      container.removeChild(list);
-      return;
-    } else {
+    console.log(filteredArray);
+    if (filteredArray && filteredArray.length !== 0) {
+      filteredArray.forEach((item) => {
+        item.isActive = false;
+      });
       filteredArray[activeListItemIndex].isActive = true;
+
+      filteredArray.forEach((listItem) => {
+        const li = document.createElement("li");
+        li.innerHTML = listItem.name;
+        listItem.isActive === true && li.classList.add("isActive");
+        list.appendChild(li);
+      });
       container.appendChild(list);
-      filteredArray &&
-        filteredArray.forEach((listItem) => {
-          const li = document.createElement("li");
-          li.innerHTML = listItem.name;
-          listItem.isActive === true && li.classList.add("isActive");
-          list.appendChild(li);
-        });
     }
   };
 
-  container.appendChild(input);
+  const showFilteredListThrottled = throttle(showFilteredList, delay, {
+    leading: false,
+  });
+  container.appendChild(inputWrapper);
 };
